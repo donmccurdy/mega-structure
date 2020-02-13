@@ -30,6 +30,10 @@ import * as EisenScripts from './examples-generated';
 import { ShapeInstance } from './structure';
 import { Progress } from './progress';
 
+window['THREE'] = THREE;
+
+require('three/examples/js/exporters/GLTFExporter.js');
+
 var renderer: THREE.WebGLRenderer;
 
 function toggleFullScreen() {
@@ -246,6 +250,13 @@ window.addEventListener('load', () => {
 				geometry.addAttribute('color', new THREE.BufferAttribute(new Float32Array(msg.color), 3));
 				geometry.center();
 				mesh.geometry = geometry;
+
+				var exporter = new THREE.GLTFExporter();
+				exporter.parse( mesh, function ( gltf ) {
+					console.log('generated: ', gltf);
+					createAndDownloadBlobFile(gltf, 'generated.glb');
+				}, {binary: true} );
+
 				resetViewport();
 				console.log('Synth request processed in ' + (new Date().getTime() - tstamp) + 'ms');
 				break;
@@ -258,3 +269,15 @@ window.addEventListener('load', () => {
 	requestAnimationFrame(animate);
 	doResize();
 });
+
+function createAndDownloadBlobFile(body, fileName) {
+	var blob = new Blob([body]);
+	var link = document.createElement('a');
+	var url = URL.createObjectURL(blob);
+	link.setAttribute('href', url);
+	link.setAttribute('download', fileName);
+	link.style.visibility = 'hidden';
+	document.body.appendChild(link);
+	link.click();
+	document.body.removeChild(link);
+}
